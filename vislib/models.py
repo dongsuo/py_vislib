@@ -42,3 +42,22 @@ class BoardOrder(models.Model):
   id=models.CharField(max_length=64, primary_key=True)
   created_at = models.DateTimeField(db_index=True, default=default_datetime)
   updated_at = models.DateTimeField(db_index=True, null=False)
+
+class SourceDataBase(models.Model):
+  host=models.CharField(max_length=32)
+  port=models.IntegerField()
+  username=models.CharField(max_length=32)
+  password=models.CharField(max_length=64)
+  database=models.CharField(max_length=32)
+  creator=models.ForeignKey(User, on_delete=models.CASCADE)
+  id=models.CharField(max_length=64, primary_key=True)
+  created_at = models.DateTimeField(db_index=True, default=default_datetime)
+  updated_at = models.DateTimeField(db_index=True, null=False)
+
+class SourceDataTable(models.Model):
+  database=models.ForeignKey(SourceDataBase, on_delete=models.CASCADE)
+  table=models.CharField(max_length=32)
+  creator=models.ForeignKey(User, on_delete=models.CASCADE)
+  id=models.CharField(max_length=64, primary_key=True)
+  created_at = models.DateTimeField(db_index=True, default=default_datetime)
+  updated_at = models.DateTimeField(db_index=True, null=False)

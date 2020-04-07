@@ -22,4 +22,10 @@ urlpatterns = [
   path('chartboard/map', views.chartBoardMap, name="chartBoardMap"),
   path('chartboard/unmap', views.chartBoardUnmap, name="chartBoardUnmap"),
   path('chartboardmap/chartbydashboard', views.chartByBoard, name="chartByBoard"),
+  path('source/list', views.sourceList, name="sourceList"),
+  path('source/create', views.createSource, name="createSource"),
+  path('source/update', views.updateSource, name="updateSource"),
+  path('source/delete', views.deleteSource, name="deleteSource"),
+  path('source/<uuid:sourceId>', views.sourceDetail, name="sourceDetail"),
+
 ]

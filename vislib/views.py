@@ -8,7 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from MySQLdb import _mysql
 from django.core import serializers
-from vislib.models import Chart, Dashboard, ChartBoardMap, BoardOrder
+from vislib.models import Chart, Dashboard, ChartBoardMap, BoardOrder, SourceDataBase
 from django.utils import timezone
 import uuid
 # Create your views here.
@@ -276,3 +276,70 @@ def dashboardOrder(request):
       updated_at=default_datetime()
     )
   return JsonResponse({'code': 20000, 'message': 'success'})
+
+@csrf_exempt
+def createSource(request):
+  body_unicode = request.body.decode('utf-8')
+  body = json.loads(body_unicode)
+  host = body['host']
+  port = body.get('port', 3306)
+  username = body.get('username')
+  password = body.get('password')
+  database = body.get('database')
+  creator = request.user
+  source_id = uuid.uuid4()
+
+  SourceDataBase.objects.create(
+    source_id=source_id,
+    host=host,
+    port=port,
+    username=username,
+    password=password,
+    database=database,
+    creator=creator,
+    is_private=True,
+    status=1,
+    updated_at=default_datetime()
+  )
+  return JsonResponse({'code': 20000, 'message': 'success', 'data': {'id': dashboard_id}})
+
+@csrf_exempt
+def deleteSource(request):
+  body_unicode = request.body.decode('utf-8')
+  body = json.loads(body_unicode)
+  source = SourceDataBase.objects.get(source_id=body['source_id'])
+  source.delete()
+  return JsonResponse({'code': 20000, 'message': 'success'})
+
+@csrf_exempt
+def updateSource(request):
+  body_unicode = request.body.decode('utf-8')
+  body = json.loads(body_unicode)
+  source = SourceDataBase.objects.get(source_id=body['source_id'])
+  source.host = body['host']
+  source.port = body.get('port', 3306)
+  source.username = body.get('username')
+  source.password = body.get('password')
+  source.database = body.get('database')
+
+  source.save()
+  return JsonResponse({'code': 20000, 'message': 'success'})
+
+@csrf_exempt
+def sourceList():
+  sourceList = SourceDataBase.objects.filter(creator=request.user)
+  sourceList = serializers.serialize('json', sourceList)
+  sourceList = json.loads(sourceList)
+  sourceArr = []
+  for source in sourceList:
+    source['fields']['source_id'] = source['pk']
+    sourceArr.append(source['fields'])
+  return JsonResponse({'code': 20000, 'data': sourceArr})
+
+@csrf_exempt
+def sourceDetail(request, sourceId):
+  sourceDetail = SourceDataBase.objects.get(source_id=sourceId)
+  sourceDetail = serializers.serialize('json', [sourceDetail])
+  sourceDetail = json.loads(sourceDetail)[0]
+
+  return JsonResponse({'code': 20000, 'message': 'success', 'data':sourceDetail['fields'] })

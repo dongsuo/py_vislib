@@ -286,6 +286,7 @@ def createSource(request):
   username = body.get('username')
   password = body.get('password')
   database = body.get('database')
+  base_alias = body.get('base_alias')
   creator = request.user
   source_id = uuid.uuid4()
 
@@ -296,12 +297,13 @@ def createSource(request):
     username=username,
     password=password,
     database=database,
+    base_alias=base_alias,
     creator=creator,
     is_private=True,
     status=1,
     updated_at=default_datetime()
   )
-  return JsonResponse({'code': 20000, 'message': 'success', 'data': {'id': dashboard_id}})
+  return JsonResponse({'code': 20000, 'message': 'success', 'data': {'id': source_id}})
 
 @csrf_exempt
 def deleteSource(request):
@@ -321,18 +323,20 @@ def updateSource(request):
   source.username = body.get('username')
   source.password = body.get('password')
   source.database = body.get('database')
+  source.base_alias = body.get('base_alias')
 
   source.save()
   return JsonResponse({'code': 20000, 'message': 'success'})
 
 @csrf_exempt
-def sourceList():
+def sourceList(request):
   sourceList = SourceDataBase.objects.filter(creator=request.user)
   sourceList = serializers.serialize('json', sourceList)
   sourceList = json.loads(sourceList)
   sourceArr = []
   for source in sourceList:
     source['fields']['source_id'] = source['pk']
+    source['fields']['password'] = None
     sourceArr.append(source['fields'])
   return JsonResponse({'code': 20000, 'data': sourceArr})
 

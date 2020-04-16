@@ -61,6 +61,7 @@ class SourceDataTable(models.Model):
   database=models.ForeignKey(SourceDataBase, on_delete=models.CASCADE)
   table=models.CharField(max_length=32)
   table_alias=models.CharField(max_length=32)
+  status=models.IntegerField(default=1)
   creator=models.ForeignKey(User, on_delete=models.CASCADE)
   id=models.CharField(max_length=64, primary_key=True)
   created_at = models.DateTimeField(db_index=True, default=default_datetime)

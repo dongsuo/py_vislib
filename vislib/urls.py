@@ -27,5 +27,6 @@ urlpatterns = [
   path('source/update', views.updateSource, name="updateSource"),
   path('source/delete', views.deleteSource, name="deleteSource"),
   path('source/<uuid:sourceId>', views.sourceDetail, name="sourceDetail"),
-
+  path('source/tables/<uuid:sourceId>', views.sourceTables, name="sourceTables"),
+  path('source/tables/save', views.sourceTableSave, name="sourceTableSave")
 ]

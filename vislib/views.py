@@ -8,7 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from MySQLdb import _mysql
 from django.core import serializers
-from vislib.models import Chart, Dashboard, ChartBoardMap, BoardOrder, SourceDataBase
+from vislib.models import Chart, Dashboard, ChartBoardMap, BoardOrder, SourceDataBase, SourceDataTable
 from django.utils import timezone
 import uuid
 # Create your views here.
@@ -55,9 +55,39 @@ def userLogout(request):
   logout(request)
   return JsonResponse({'code': 20000, 'message': 'success'})
 
+@csrf_exempt
 def execSql(request):
-  db=_mysql.connect( "127.0.0.1", "root", "123456xxf", "sql12298540", charset='utf8')
-  db.query(request.GET['sql'])
+  body_unicode = request.body.decode('utf-8')
+  body = json.loads(body_unicode)
+  sql = body['sql']
+  sourceId = body['source_id']
+  try:
+    source = SourceDataBase.objects.get(source_id=sourceId)
+    source = serializers.serialize('json', [sourceDetail])
+    source = json.loads(sourceDetail)[0]['fields']
+  except:
+    source = {
+      'host': '127.0.0.1',
+      'username': 'root',
+      'port': '3306',
+      'password': '123456xxf',
+      'database': 'sql12298540'
+    }
+  host = source['host']
+  username = source['username']
+  port = source['port']
+  password = source['password']
+  database = source['database']
+
+  db=_mysql.connect(
+    host=host, 
+    port=int(port), 
+    user=username, 
+    passwd=password, 
+    db=database,
+    charset='utf8'
+  )
+  db.query(sql)
   data = db.store_result().fetch_row(maxrows=0, how=2)
   db.close()
   json_data = []
@@ -347,3 +377,68 @@ def sourceDetail(request, sourceId):
   sourceDetail = json.loads(sourceDetail)[0]
 
   return JsonResponse({'code': 20000, 'message': 'success', 'data':sourceDetail['fields'] })
+
+@csrf_exempt
+def sourceTables(request, sourceId):
+  try:
+    tables = SourceDataTable.objects.get(database=sourceId)
+    tables = serializers.serialize('json', [tables])
+    tables = json.loads(tables)
+    json_data = []
+    for table in tables:
+      json_data.append(table['fields'])
+    
+    
+  except:
+    source = SourceDataBase.objects.get(source_id=sourceId)
+    source = serializers.serialize('json', [source])
+    source = json.loads(source)[0]['fields']
+    host = source['host']
+    username = source['username']
+    port = source['port']
+    password = source['password']
+    database = source['database']
+
+    db=_mysql.connect(
+      host=host, 
+      port=int(port), 
+      user=username, 
+      passwd=password, 
+      db=database,
+      charset='utf8'
+    )
+    db.query('show tables;')
+    tables = db.store_result().fetch_row(maxrows=0, how=2)
+    db.close()
+    json_data = list(tables[0].values())
+    for i, table in enumerate(json_data):
+      json_data[i] = {
+        'table': table.decode('utf-8'),
+        'status': 0
+      }
+
+
+  return JsonResponse({'code': 20000, 'message': 'success', 'data': json_data })
+
+@csrf_exempt
+
+def sourceTableSave(request):
+  body_unicode = request.body.decode('utf-8')
+  body = json.loads(body_unicode)
+  print(body)
+  source_id = body['source_id']
+  SourceDataTable.objects.filter(database=source_id).delete()
+  source = SourceDataBase.objects.get(source_id=source_id)
+
+  for table in body['tables']:
+    tableConfig = SourceDataTable.objects.create(
+      id=uuid.uuid4(),
+      database=source,
+      table=table['table'],
+      table_alias=table['table_alias'],
+      creator=request.user,
+      status=table['status'],
+      updated_at=default_datetime()
+    )
+    tableConfig.save()
+  return JsonResponse({'code': 20000, 'message': 'success' })

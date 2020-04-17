@@ -1,0 +1,5 @@
+[MASTER]
+
+ignore=migrations
+disable=
+    C0114, # missing-module-docstring

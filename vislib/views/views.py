@@ -5,6 +5,7 @@ from MySQLdb import _mysql
 from django.core import serializers
 from vislib.models import SourceDataBase, SourceDataTable
 from django.utils import timezone
+from common.utils.aes import pc
 import uuid
 # Create your views here.
 
@@ -28,7 +29,7 @@ def execSql(request):
   host = source['host']
   username = source['username']
   port = source['port']
-  password = source['password']
+  password = pc.decrypt(source['password'])
   database = source['database']
 
   db=_mysql.connect(

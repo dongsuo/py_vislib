@@ -13,3 +13,5 @@ DATABASES = {
         'PORT': '3306',
     }
 }
+
+CRYPT_KEY = 'keyskeyskeyskeys'

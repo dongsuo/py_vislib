@@ -10,7 +10,7 @@ class SourceDataBase(models.Model):
     host = models.CharField(max_length=32)
     port = models.IntegerField()
     username = models.CharField(max_length=32)
-    password = models.CharField(max_length=64)
+    password = models.CharField(max_length=256)
     database = models.CharField(max_length=32)
     base_alias = models.CharField(max_length=32)
     creator = models.ForeignKey(User, on_delete=models.CASCADE)

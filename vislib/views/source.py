@@ -5,7 +5,13 @@ from django.views.decorators.csrf import csrf_exempt
 from django.core import serializers
 from vislib.models import SourceDataBase, SourceDataTable
 from django.utils import timezone
+from common.utils.aes import pc
+from MySQLdb import _mysql
 import uuid
+
+def default_datetime():
+    now = timezone.now()
+    return now
 
 @csrf_exempt
 def createSource(request):
@@ -14,7 +20,7 @@ def createSource(request):
   host = body['host']
   port = body.get('port', 3306)
   username = body.get('username')
-  password = body.get('password')
+  password = pc.encrypt(body.get('password')).decode('utf-8')
   database = body.get('database')
   base_alias = body.get('base_alias')
   creator = request.user
@@ -51,7 +57,12 @@ def updateSource(request):
   source.host = body['host']
   source.port = body.get('port', 3306)
   source.username = body.get('username')
-  source.password = body.get('password')
+  if body.get('password'):
+    source.password = pc.encrypt(body.get('password'))
+  else:
+    source = serializers.serialize('json', [source])
+    source = json.loads(source)[0]['fields']
+    source.password = source['password']
   source.database = body.get('database')
   source.base_alias = body.get('base_alias')
 
@@ -92,11 +103,14 @@ def sourceTables(request, sourceId):
     source = SourceDataBase.objects.get(source_id=sourceId)
     source = serializers.serialize('json', [source])
     source = json.loads(source)[0]['fields']
+    password = source['password'].encode(('utf-8'))
+    print(password)
     host = source['host']
     username = source['username']
     port = source['port']
-    password = source['password']
+    password = pc.decrypt(password)
     database = source['database']
+    print(password)
 
     db=_mysql.connect(
       host=host, 

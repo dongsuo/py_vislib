@@ -1,144 +1,15 @@
 import json
 from django.shortcuts import render
-from django.http import HttpResponse
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.models import User
-from MySQLdb import _mysql
 from django.core import serializers
 from vislib.models import Chart, Dashboard, ChartBoardMap, BoardOrder
 from django.utils import timezone
 import uuid
-# Create your views here.
 
 def default_datetime():
     now = timezone.now()
     return now
-
-def index(request):
-  return HttpResponse('hello python and django')
-
-@csrf_exempt
-def user(request):
-  if request.user.is_authenticated:
-    username = request.user.get_username()
-    return JsonResponse({'code': 20000, 'data': {'username': username}})
-  else:
-    return JsonResponse({'code': 40000, 'message': 'Please login'})
-
-@csrf_exempt
-def userSignup(request):
-  body = json.loads(request.body)
-  if User.objects.filter(username=body['userName']).exists():
-    return JsonResponse({'code': 10000, 'message': 'User Name ' +  body['userName'] + ' is Already Tabken.'})
-  if User.objects.filter(email=body['email']).exists():
-    return JsonResponse({'code': 10000, 'message': 'Email ' +  body['emaul'] + ' is Registered.'})
-  user = User.objects.create_user(body['userName'], body['email'], body['password'])
-  user.first_name=body['userName']
-  user.save()
-  return JsonResponse({'code': 20000, 'message': 'success'})
-
-@csrf_exempt
-def userLogin(request):
-  body = json.loads(request.body)
-  user = authenticate(request, username=body['userName'], password=body['password'])
-  if user is not None:
-    login(request, user)
-    return JsonResponse({'code': 20000, 'message': 'success'})
-  else:
-    return JsonResponse({'code': 10000, 'message': 'Name or Password Not Correct, Please Try Again.'})
-
-@csrf_exempt
-def userLogout(request):
-  logout(request)
-  return JsonResponse({'code': 20000, 'message': 'success'})
-
-def execSql(request):
-  db=_mysql.connect( "127.0.0.1", "root", "123456xxf", "sql12298540", charset='utf8')
-  db.query(request.GET['sql'])
-  data = db.store_result().fetch_row(maxrows=0, how=2)
-  db.close()
-  json_data = []
-  for index in range(len(data)):
-    row = data[index]
-    json_data.append({})
-    for key in row:
-      if(key.find('.')>0):
-        column = (key.split('.'))[1]
-      else:
-        column = key
-      if isinstance(row[key], bytes):
-        json_data[index][column] = row[key].decode('UTF-8')
-      else:
-        json_data[index][column] = row[key]
-  response = {
-    'code': 20000,
-    'message': 'success',
-    'data': json_data
-  }
-  return JsonResponse(response)
-
-@csrf_exempt
-def chartList(request):
-  charts = Chart.objects.filter(creator=request.user)
-  charts = serializers.serialize('json', charts)
-  charts = json.loads(charts)
-  chartArr = []
-  for chart in charts:
-    chart['fields']['chart_id'] = chart['pk']
-    chartArr.append(chart['fields'])
-  return JsonResponse({'code': 20000, 'data': chartArr})
-
-@csrf_exempt
-def createChart(request):
-  body_unicode = request.body.decode('utf-8')
-  body = json.loads(body_unicode)
-  chart_name = body['chart_name']
-  desc = body.get('desc', None)
-  content = body['content']
-  creator = request.user
-  chart_id = uuid.uuid4()
-  Chart.objects.create(
-    chart_id=chart_id,
-    chart_name=chart_name,
-    desc=desc,
-    content=json.dumps(content),
-    creator=creator,
-    is_private=True,
-    status=1,
-    updated_at=default_datetime()
-  )
-  return JsonResponse({'code': 20000, 'message': 'success', 'data': {'id': chart_id}})
-
-@csrf_exempt
-def updateChart(request):
-  body_unicode = request.body.decode('utf-8')
-  body = json.loads(body_unicode)
-  chart = Chart.objects.get(chart_id=body['id'])
-  chart.chart_name = body['chart_name']
-  chart.desc = body['desc']
-  chart.content = json.dumps(body['content'])
-  chart.updated_at = default_datetime()
-  chart.save()
-  return JsonResponse({'code': 20000, 'message': 'success', 'data': {'id': body['id']}})
-
-@csrf_exempt
-def deleteChart(request):
-  body_unicode = request.body.decode('utf-8')
-  body = json.loads(body_unicode)
-  chart = Chart.objects.get(chart_id=body['chart_id'])
-  chart.delete()
-  return JsonResponse({'code': 20000, 'message': 'success'})
-
-@csrf_exempt
-def chartDetail(request, chartId):
-  chartDetail = Chart.objects.get(chart_id=chartId)
-  chartDetail = serializers.serialize('json', [chartDetail])
-  chartDetail = json.loads(chartDetail)[0]
-
-  return JsonResponse({'code': 20000, 'message': 'success', 'data':chartDetail['fields'] })
 
 @csrf_exempt
 def createDashboard(request):

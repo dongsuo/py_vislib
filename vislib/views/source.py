@@ -113,10 +113,10 @@ def sourceTables(request, sourceId):
     print(password)
 
     db=_mysql.connect(
-      host=host, 
-      port=int(port), 
-      user=username, 
-      passwd=password, 
+      host=host,
+      port=int(port),
+      user=username,
+      passwd=password,
       db=database,
       charset='utf8'
     )

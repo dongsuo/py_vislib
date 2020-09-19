@@ -33,10 +33,10 @@ def execSql(request):
   database = source['database']
 
   db=_mysql.connect(
-    host=host, 
-    port=int(port), 
-    user=username, 
-    passwd=password, 
+    host=host,
+    port=int(port),
+    user=username,
+    passwd=password,
     db=database,
     charset='utf8'
   )

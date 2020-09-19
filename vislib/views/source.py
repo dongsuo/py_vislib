@@ -5,8 +5,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.core import serializers
 from django.utils import timezone
 from MySQLdb import _mysql
-from py_vislib.vislib.models import SourceDataBase, SourceDataTable
-from py_vislib.common.utils.aes import pc
+from vislib.models import SourceDataBase, SourceDataTable
+from common.utils.aes import pc
 
 
 def default_datetime():

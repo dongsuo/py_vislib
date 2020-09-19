@@ -10,8 +10,8 @@ import uuid
 # Create your views here.
 
 def default_datetime():
-    now = timezone.now()
-    return now
+  now = timezone.now()
+  return now
 
 def index(request):
   return HttpResponse('hello python and django')

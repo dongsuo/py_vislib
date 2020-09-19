@@ -1,17 +1,17 @@
 import json
-from django.shortcuts import render
+import uuid
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.core import serializers
-from vislib.models import SourceDataBase, SourceDataTable
 from django.utils import timezone
-from common.utils.aes import pc
 from MySQLdb import _mysql
-import uuid
+from py_vislib.vislib.models import SourceDataBase, SourceDataTable
+from py_vislib.common.utils.aes import pc
+
 
 def default_datetime():
-    now = timezone.now()
-    return now
+  now = timezone.now()
+  return now
 
 @csrf_exempt
 def createSource(request):
@@ -58,7 +58,7 @@ def updateSource(request):
   source.port = body.get('port', 3306)
   source.username = body.get('username')
   if body.get('password'):
-    source.password = pc.encrypt(body.get('password'))
+    source.password = pc.encrypt(body.get('password')).decode('utf-8')
   else:
     source = serializers.serialize('json', [source])
     source = json.loads(source)[0]['fields']
@@ -71,11 +71,11 @@ def updateSource(request):
 
 @csrf_exempt
 def sourceList(request):
-  sourceList = SourceDataBase.objects.filter(creator=request.user)
-  sourceList = serializers.serialize('json', sourceList)
-  sourceList = json.loads(sourceList)
+  sources = SourceDataBase.objects.filter(creator=request.user)
+  sources = serializers.serialize('json', sources)
+  sources = json.loads(sources)
   sourceArr = []
-  for source in sourceList:
+  for source in sources:
     source['fields']['source_id'] = source['pk']
     source['fields']['password'] = None
     sourceArr.append(source['fields'])
@@ -83,11 +83,11 @@ def sourceList(request):
 
 @csrf_exempt
 def sourceDetail(request, sourceId):
-  sourceDetail = SourceDataBase.objects.get(source_id=sourceId)
-  sourceDetail = serializers.serialize('json', [sourceDetail])
-  sourceDetail = json.loads(sourceDetail)[0]
+  sourceItem = SourceDataBase.objects.get(source_id=sourceId)
+  sourceItem = serializers.serialize('json', [sourceItem])
+  sourceItem = json.loads(sourceItem)[0]
 
-  return JsonResponse({'code': 20000, 'message': 'success', 'data':sourceDetail['fields'] })
+  return JsonResponse({'code': 20000, 'message': 'success', 'data':sourceItem['fields'] })
 
 @csrf_exempt
 def sourceTables(request, sourceId):
@@ -99,7 +99,7 @@ def sourceTables(request, sourceId):
     for table in tables:
       json_data.append(table['fields'])
 
-  except:
+  finally:
     source = SourceDataBase.objects.get(source_id=sourceId)
     source = serializers.serialize('json', [source])
     source = json.loads(source)[0]['fields']
@@ -165,8 +165,7 @@ def sourceLinkedTables(request, sourceId):
     json_data = []
     for table in tables:
       json_data.append(table['fields'])
-
-  except:
+  finally:
     json_data = []
 
 

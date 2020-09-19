@@ -17,7 +17,6 @@ def createDashboard(request):
   body = json.loads(body_unicode)
   name = body['name']
   desc = body.get('desc', '')
-  content = body.get('content', '')
   creator = request.user
   dashboard_id = uuid.uuid4()
 

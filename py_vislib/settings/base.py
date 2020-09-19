@@ -29,7 +29,7 @@ ALLOWED_HOSTS = ['*']
 
 # 跨域
 # CORS_ORIGIN_ALLOW_ALL = True
-# SESSION_COOKIE_SAMESITE = None
+# SESSION_COOKIE_SAMESITE = 'strict'
 # SESSION_COOKIE_SECURE = True
 # Application definition
 

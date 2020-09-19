@@ -99,7 +99,7 @@ def sourceTables(request, sourceId):
     for table in tables:
       json_data.append(table['fields'])
 
-  finally:
+  except:
     source = SourceDataBase.objects.get(source_id=sourceId)
     source = serializers.serialize('json', [source])
     source = json.loads(source)[0]['fields']
@@ -165,7 +165,7 @@ def sourceLinkedTables(request, sourceId):
     json_data = []
     for table in tables:
       json_data.append(table['fields'])
-  finally:
+  except:
     json_data = []
 
 

@@ -1,20 +1,17 @@
 import json
+import uuid
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from MySQLdb import _mysql
 from django.core import serializers
-from vislib.models import SourceDataBase, SourceDataTable
+from vislib.models import SourceDataBase
 from django.utils import timezone
 from common.utils.aes import pc
-import uuid
 # Create your views here.
 
 def default_datetime():
   now = timezone.now()
   return now
-
-def index(request):
-  return HttpResponse('hello python and django')
 
 
 @csrf_exempt
@@ -38,7 +35,6 @@ def execSql(request):
     user=username,
     passwd=password,
     db=database,
-    charset='utf8'
   )
   db.query(sql)
   data = db.store_result().fetch_row(maxrows=0, how=2)

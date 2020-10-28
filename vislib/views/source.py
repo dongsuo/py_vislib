@@ -100,36 +100,38 @@ def sourceTables(request, sourceId):
       json_data.append(table['fields'])
 
   except:
-    source = SourceDataBase.objects.get(source_id=sourceId)
-    source = serializers.serialize('json', [source])
-    source = json.loads(source)[0]['fields']
-    password = source['password'].encode(('utf-8'))
-    print(password)
-    host = source['host']
-    username = source['username']
-    port = source['port']
-    password = pc.decrypt(password)
-    database = source['database']
-    print(password)
+    print('no linked tables before')
 
-    db=_mysql.connect(
-      host=host,
-      port=int(port),
-      user=username,
-      passwd=password,
-      db=database,
-      charset='utf8'
-    )
-    db.query('show tables;')
-    tables = db.store_result().fetch_row(maxrows=0, how=2)
-    db.close()
-    json_data = list(tables[0].values())
-    for i, table in enumerate(json_data):
-      json_data[i] = {
-        'table': table.decode('utf-8'),
+  source = SourceDataBase.objects.get(source_id=sourceId)
+  source = serializers.serialize('json', [source])
+  source = json.loads(source)[0]['fields']
+  password = source['password'].encode(('utf-8'))
+  host = source['host']
+  username = source['username']
+  port = source['port']
+  password = pc.decrypt(password)
+  database = source['database']
+
+  db=_mysql.connect(
+    host=host,
+    port=int(port),
+    user=username,
+    passwd=password,
+    db=database
+  )
+  db.query('show tables;')
+  tables = db.store_result().fetch_row(maxrows=0, how=2)
+  db.close()
+  tables = list(tables)
+  for i, table in enumerate(tables):
+    tableName = list(table.values())[0].decode('utf-8')
+    if next((x for x in json_data if x['table'] == tableName), None):
+      print(tableName + ' linked')
+    else:
+      json_data.append({
+        'table': tableName,
         'status': 0
-      }
-
+      })
 
   return JsonResponse({'code': 20000, 'message': 'success', 'data': json_data })
 

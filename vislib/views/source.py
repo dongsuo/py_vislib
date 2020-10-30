@@ -93,14 +93,15 @@ def sourceDetail(request, sourceId):
 def sourceTables(request, sourceId):
   json_data = []
   try:
-    tables = SourceDataTable.objects.get(database=sourceId)
-    tables = serializers.serialize('json', [tables])
+    tables = SourceDataTable.objects.filter(database=sourceId)
+
+    tables = serializers.serialize('json', tables)
     tables = json.loads(tables)
     for table in tables:
       json_data.append(table['fields'])
 
-  except:
-    print('no linked tables before')
+  except Exception as e:
+    print('no linked tables before', e)
 
   source = SourceDataBase.objects.get(source_id=sourceId)
   source = serializers.serialize('json', [source])
@@ -161,17 +162,15 @@ def sourceTableSave(request):
 @csrf_exempt
 def sourceLinkedTables(request, sourceId):
   try:
-    tables = SourceDataTable.objects.get(database=sourceId)
-    print(tables)
-    tables = serializers.serialize('json', [tables])
-    print(tables)
+    tables = SourceDataTable.objects.filter(database=sourceId)
+    tables = serializers.serialize('json', tables)
     tables = json.loads(tables)
-    print(tables)
     json_data = []
     for table in tables:
       json_data.append(table['fields'])
-  except:
+  except Exception as e:
     json_data = []
+    printz(e)
 
 
   return JsonResponse({'code': 20000, 'message': 'success', 'data': json_data })

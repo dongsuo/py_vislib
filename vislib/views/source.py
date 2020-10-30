@@ -91,11 +91,11 @@ def sourceDetail(request, sourceId):
 
 @csrf_exempt
 def sourceTables(request, sourceId):
+  json_data = []
   try:
     tables = SourceDataTable.objects.get(database=sourceId)
     tables = serializers.serialize('json', [tables])
     tables = json.loads(tables)
-    json_data = []
     for table in tables:
       json_data.append(table['fields'])
 
@@ -162,8 +162,11 @@ def sourceTableSave(request):
 def sourceLinkedTables(request, sourceId):
   try:
     tables = SourceDataTable.objects.get(database=sourceId)
+    print(tables)
     tables = serializers.serialize('json', [tables])
+    print(tables)
     tables = json.loads(tables)
+    print(tables)
     json_data = []
     for table in tables:
       json_data.append(table['fields'])

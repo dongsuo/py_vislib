@@ -170,7 +170,7 @@ def sourceLinkedTables(request, sourceId):
       json_data.append(table['fields'])
   except Exception as e:
     json_data = []
-    printz(e)
+    print(e)
 
 
   return JsonResponse({'code': 20000, 'message': 'success', 'data': json_data })

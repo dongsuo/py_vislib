@@ -50,7 +50,7 @@ def execSql(request):
           column = key
         if isinstance(row[key], bytes):
           print(row[key], key)
-          json_data[index][column] = row[key].decode('UTF-8')
+          json_data[index][column] = row[key].decode('UTF-8', 'ignore')
         else:
           json_data[index][column] = row[key]
     response = {
@@ -62,7 +62,7 @@ def execSql(request):
     print(e)
     response = {
       'code': 10000,
-      'message': 'fail',
-      'data': str(e)
+      'message': str(e),
+      'data': {}
     }
   return JsonResponse(response)

@@ -35,6 +35,7 @@ def execSql(request):
       user=username,
       passwd=password,
       db=database,
+      charset='utf8'
     )
     db.query(sql)
     data = db.store_result().fetch_row(maxrows=0, how=2)
@@ -49,7 +50,6 @@ def execSql(request):
         else:
           column = key
         if isinstance(row[key], bytes):
-          print(row[key], key)
           json_data[index][column] = row[key].decode('UTF-8', 'ignore')
         else:
           json_data[index][column] = row[key]

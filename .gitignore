@@ -1,3 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.venv/
+venv/
 
-py_vislib/settings/prod.py
-*.pyc
+# Data dumps (NEVER commit user data to a public repo)
+datadump.json
+*.sql
+*.sql.gz
+
+# Django
+*.sqlite3
+/staticfiles/
+/media/
+
+# Local dev settings (keep secrets out of git)
+py_vislib/settings/local.py
+
+# Env files
+.env
+.env.local
+*.env

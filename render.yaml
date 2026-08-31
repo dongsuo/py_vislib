@@ -1,0 +1,26 @@
+# Render Blueprint: https://render.com/docs/blueprint-spec
+# Database is external (Neon PostgreSQL) — set DATABASE_URL below.
+services:
+  - type: web
+    name: py-vislib
+    runtime: python
+    plan: free
+    region: singapore
+    buildCommand: pip install -r requirements.txt
+    preDeployCommand: python manage.py collectstatic --noinput --settings=py_vislib.settings.prod && python manage.py migrate --noinput --settings=py_vislib.settings.prod
+    startCommand: gunicorn py_vislib.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --log-file -
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      - key: DJANGO_SETTINGS_MODULE
+        value: py_vislib.settings.prod
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        sync: false   # paste the Neon connection string
+      - key: CRYPT_KEY
+        sync: false   # paste the existing prod CRYPT_KEY (else saved source passwords won't decrypt)
+      - key: DEBUG
+        value: "False"
+      - key: ALLOWED_HOSTS
+        value: "api.pxlab.eu.org,api.v11nlab.com,api.vislib.best,dev.vislib.best,.onrender.com"

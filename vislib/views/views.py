@@ -34,8 +34,8 @@ def execSql(request):
       port=int(port),
       user=username,
       passwd=password,
-      db=database,
-      charset='utf8'
+      db=database
+    #  charset='utf8'
     )
     db.query(sql)
     data = db.store_result().fetch_row(maxrows=0, how=2)

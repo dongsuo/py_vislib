@@ -19,6 +19,14 @@ CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SAMESITE = None
 CSRF_COOKIE_SAMESITE = None
 
+# CORS: the frontend is on a different origin. The old VPS deploy had nginx
+# reflect $http_origin with credentials; on Render there's no nginx in front,
+# so django-cors-headers does the equivalent here. With both flags set it
+# reflects the request Origin (NOT "*", which the CORS spec forbids together
+# with credentials) — same behaviour the old nginx block produced.
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
+
 # Database: PostgreSQL via DATABASE_URL.
 # On Render, set DATABASE_URL to the Neon connection string.
 # Locally (no DATABASE_URL), fall back to sqlite so `manage.py check/migrate`

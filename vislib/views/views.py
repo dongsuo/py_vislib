@@ -3,7 +3,7 @@ from django.http import JsonResponse
 from django.core import serializers
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
-from MySQLdb import _mysql
+from vislib.db import run_sql
 from vislib.models import SourceDataBase
 from common.utils.aes import pc
 # Create your views here.
@@ -29,30 +29,16 @@ def execSql(request):
     password = pc.decrypt(source['password'])
     database = source['database']
 
-    db=_mysql.connect(
-      host=host,
-      port=int(port),
-      user=username,
-      passwd=password,
-      db=database
-    #  charset='utf8'
+    db_type = source.get('db_type') or SourceDataBase.DB_MYSQL
+    json_data = run_sql(
+      db_type,
+      host,
+      int(port),
+      username,
+      password,
+      database,
+      sql,
     )
-    db.query(sql)
-    data = db.store_result().fetch_row(maxrows=0, how=2)
-    db.close()
-    json_data = []
-    for index in range(len(data)):
-      row = data[index]
-      json_data.append({})
-      for key in row:
-        if(key.find('.')>0):
-          column = (key.split('.'))[1]
-        else:
-          column = key
-        if isinstance(row[key], bytes):
-          json_data[index][column] = row[key].decode('UTF-8', 'ignore')
-        else:
-          json_data[index][column] = row[key]
     response = {
       'code': 20000,
       'message': 'success',

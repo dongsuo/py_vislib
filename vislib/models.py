@@ -7,7 +7,17 @@ def default_datetime():
   return now
 
 class SourceDataBase(models.Model):
-  host = models.CharField(max_length=32)
+  DB_MYSQL = 'mysql'
+  DB_POSTGRES = 'postgres'
+  DB_TYPE_CHOICES = [
+    (DB_MYSQL, 'MySQL'),
+    (DB_POSTGRES, 'PostgreSQL'),
+  ]
+  # Kind of the user's external database. Existing rows default to MySQL
+  # (they were all created by the old MySQL-only app), so behaviour is
+  # unchanged for them; new sources may pick PostgreSQL.
+  db_type = models.CharField(max_length=16, choices=DB_TYPE_CHOICES, default=DB_MYSQL)
+  host = models.CharField(max_length=128)
   port = models.IntegerField()
   username = models.CharField(max_length=32)
   password = models.CharField(max_length=256)

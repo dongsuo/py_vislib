@@ -4,7 +4,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.core import serializers
 from django.utils import timezone
-from MySQLdb import _mysql
+from vislib.db import list_tables
 from vislib.models import SourceDataBase, SourceDataTable
 from common.utils.aes import pc
 
@@ -17,8 +17,10 @@ def default_datetime():
 def createSource(request):
   body_unicode = request.body.decode('utf-8')
   body = json.loads(body_unicode)
+  db_type = body.get('db_type', SourceDataBase.DB_MYSQL)
   host = body['host']
-  port = body.get('port', 3306)
+  default_port = 5432 if db_type == SourceDataBase.DB_POSTGRES else 3306
+  port = body.get('port', default_port)
   username = body.get('username')
   password = pc.encrypt(body.get('password')).decode('utf-8')
   database = body.get('database')
@@ -28,6 +30,7 @@ def createSource(request):
 
   SourceDataBase.objects.create(
     source_id=source_id,
+    db_type=db_type,
     host=host,
     port=port,
     username=username,
@@ -55,14 +58,13 @@ def updateSource(request):
   body = json.loads(body_unicode)
   source = SourceDataBase.objects.get(source_id=body['source_id'])
   source.host = body['host']
-  source.port = body.get('port', 3306)
+  source.db_type = body.get('db_type', source.db_type)
+  default_port = 5432 if source.db_type == SourceDataBase.DB_POSTGRES else 3306
+  source.port = body.get('port', default_port)
   source.username = body.get('username')
   if body.get('password'):
     source.password = pc.encrypt(body.get('password')).decode('utf-8')
-  else:
-    source = serializers.serialize('json', [source])
-    source = json.loads(source)[0]['fields']
-    source.password = source['password']
+  # else: keep the existing encrypted password as-is
   source.database = body.get('database')
   source.base_alias = body.get('base_alias')
 
@@ -106,26 +108,17 @@ def sourceTables(request, sourceId):
   source = SourceDataBase.objects.get(source_id=sourceId)
   source = serializers.serialize('json', [source])
   source = json.loads(source)[0]['fields']
-  password = source['password'].encode(('utf-8'))
-  host = source['host']
-  username = source['username']
-  port = source['port']
-  password = pc.decrypt(password)
-  database = source['database']
-
-  db=_mysql.connect(
-    host=host,
-    port=int(port),
-    user=username,
-    passwd=password,
-    db=database
+  db_type = source.get('db_type') or SourceDataBase.DB_MYSQL
+  password = pc.decrypt(source['password'])
+  tables = list_tables(
+    db_type,
+    source['host'],
+    source['port'],
+    source['username'],
+    password,
+    source['database'],
   )
-  db.query('show tables;')
-  tables = db.store_result().fetch_row(maxrows=0, how=2)
-  db.close()
-  tables = list(tables)
-  for i, table in enumerate(tables):
-    tableName = list(table.values())[0].decode('utf-8')
+  for tableName in tables:
     if next((x for x in json_data if x['table'] == tableName), None):
       print(tableName + ' linked')
     else:

@@ -22,12 +22,15 @@ def _decode(value):
 
 def _run_mysql(host, port, user, password, database, sql):
     """Run SQL on a MySQL user database; return list[dict] (one per row)."""
+    # mysqlclient 2.2+ dropped the legacy `passwd`/`db` kwargs (deprecated
+    # since 1.3.8); only `password`/`database` are accepted now. These names
+    # also work on older mysqlclient (1.3.8+), so they're the safe choice.
     db = _mysql.connect(
         host=host,
         port=int(port),
         user=user,
-        passwd=password,
-        db=database,
+        password=password,
+        database=database,
     )
     try:
         db.query(sql)

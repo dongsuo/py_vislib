@@ -11,6 +11,7 @@ with ``bytes`` decoded to ``str`` so the result is JSON-serialisable.
 
 from MySQLdb import _mysql
 import psycopg2
+import re
 
 
 def _decode(value):
@@ -50,6 +51,31 @@ def _run_mysql(host, port, user, password, database, sql):
     return rows
 
 
+def _postgres_desc_sql(sql):
+    """Translate MySQL-style DESC/DESCRIBE <table> into a Postgres catalog query."""
+    match = re.match(r'^\s*(?:desc|describe)\s+([A-Za-z_][\w$]*)\s*;?\s*$', sql, re.IGNORECASE)
+    if not match:
+        return sql
+    table_name = match.group(1)
+    return (
+        "SELECT "
+        "column_name AS \"Field\", "
+        "CASE "
+        "WHEN data_type = 'character varying' THEN 'varchar(' || character_maximum_length || ')' "
+        "WHEN data_type = 'character' THEN 'char(' || character_maximum_length || ')' "
+        "WHEN data_type = 'numeric' AND numeric_precision IS NOT NULL THEN 'numeric(' || numeric_precision || ',' || numeric_scale || ')' "
+        "WHEN data_type = 'USER-DEFINED' THEN udt_name "
+        "ELSE data_type END AS \"Type\", "
+        "CASE WHEN is_nullable = 'YES' THEN 'YES' ELSE 'NO' END AS \"Null\", "
+        "'' AS \"Key\", "
+        "COALESCE(column_default, '') AS \"Default\", "
+        "'' AS \"Extra\" "
+        "FROM information_schema.columns "
+        "WHERE table_schema = 'public' AND table_name = '" + table_name + "' "
+        "ORDER BY ordinal_position;"
+    )
+
+
 def _run_postgres(host, port, user, password, database, sql):
     """Run SQL on a PostgreSQL user database; return list[dict] (one per row)."""
     conn = psycopg2.connect(
@@ -65,7 +91,7 @@ def _run_postgres(host, port, user, password, database, sql):
     conn.autocommit = True
     try:
         cur = conn.cursor()
-        cur.execute(sql)
+        cur.execute(_postgres_desc_sql(sql))
         if cur.description is not None:
             columns = [desc[0] for desc in cur.description]
             raw_rows = cur.fetchall()
